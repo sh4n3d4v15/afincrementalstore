@@ -7,7 +7,7 @@
 //
 
 #import "NAFNPAppDelegate.h"
-
+#import "LoadsTableViewController.h"
 #import "AFNetworkActivityIndicatorManager.h"
 
 @implementation NAFNPAppDelegate
@@ -24,15 +24,26 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
     
     [[AFNetworkActivityIndicatorManager sharedManager] setEnabled:YES];
     
-    UIViewController *viewController = [[UITableViewController alloc] initWithStyle:UITableViewStylePlain];
+    LoadsTableViewController *viewController = [LoadsTableViewController new];
     self.navigationController = [[UINavigationController alloc] initWithRootViewController:viewController];
     
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.rootViewController = self.navigationController;
     [self.window makeKeyAndVisible];
     
+    [[NSNotificationCenter defaultCenter]
+     addObserver: self
+     selector: @selector(objectChangedNotificationReceived:)
+     name: NSManagedObjectContextObjectsDidChangeNotification
+     object: [self managedObjectContext]];
+    
     return YES;
 }
+
+-(void)objectChangedNotificationReceived:(NSNotification*)note{
+    NSLog(@"A change took place in the managed context:  %@", note);
+}
+
 
 - (void)applicationWillResignActive:(UIApplication *)application
 {

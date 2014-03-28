@@ -1,8 +1,8 @@
 #import "NewAFTemplateProjectAPIClient.h"
 #import "AFJSONRequestOperation.h"
 
-static NSString * const kNewAFTemplateProjectAPIBaseURLString = @"<# API Base URL #>";
-
+//static NSString * const kNewAFTemplateProjectAPIBaseURLString = @"http://chepserver.eu01.aws.af.cm";
+static NSString * const kNewAFTemplateProjectAPIBaseURLString = @"http://127.0.0.1:5000";
 @implementation NewAFTemplateProjectAPIClient
 
 + (instancetype)sharedClient {
@@ -15,6 +15,8 @@ static NSString * const kNewAFTemplateProjectAPIBaseURLString = @"<# API Base UR
     return _sharedClient;
 }
 
+
+
 - (id)initWithBaseURL:(NSURL *)url {
     self = [super initWithBaseURL:url];
     if (!self) {
@@ -23,6 +25,18 @@ static NSString * const kNewAFTemplateProjectAPIBaseURLString = @"<# API Base UR
     
     [self registerHTTPOperationClass:[AFJSONRequestOperation class]];
     [self setDefaultHeader:@"Accept" value:@"application/json"];
+    __block NewAFTemplateProjectAPIClient *that = self;
+    [self setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+        NSLog(@"changed %d", status);
+        BOOL isReachable = (status == AFNetworkReachabilityStatusReachableViaWiFi || status == AFNetworkReachabilityStatusReachableViaWWAN);
+        
+        NSLog(@"Network Status: %@", (isReachable) ? @"Online" : @"Offline");
+        
+        [[that operationQueue] setSuspended:!isReachable];
+    
+            //[[NSNotificationCenter defaultCenter]postNotificationName:@"didBecomeOnlineNotifcation" object:nil];
+    }];
+    
     
     return self;
 }
@@ -39,7 +53,11 @@ static NSString * const kNewAFTemplateProjectAPIBaseURLString = @"<# API Base UR
 {
     NSMutableDictionary *mutablePropertyValues = [[super attributesForRepresentation:representation ofEntity:entity fromResponse:response] mutableCopy];
     
-    // Customize the response object to fit the expected attribute keys and values  
+    // Customize the response object to fit the expected attribute keys and values
+    if ([entity.name isEqualToString:@"Load"]) {
+        NSNumber *id = [representation objectForKey:@"id"];
+        [mutablePropertyValues setValue:id forKey:@"id"];
+    }
     
     return mutablePropertyValues;
 }
